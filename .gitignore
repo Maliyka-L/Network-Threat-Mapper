@@ -1,5 +1,11 @@
 venv/
 __pycache__/
 *.pyc
+
+# Generated reports
 reports/*.pdf
 reports/*.json
+
+# Packet captures
+*.pcap
+*.pcapng
