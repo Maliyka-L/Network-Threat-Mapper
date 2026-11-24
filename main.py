@@ -5,7 +5,7 @@ Entry point for the application.
 """
 
 import argparse
-
+from parser.statistics import get_protocol_statistics
 from parser.pcap_loader import load_pcap
 from parser.connection_extractor import extract_connections
 from utils.anonymiser import Anonymiser
@@ -62,15 +62,30 @@ def main():
     connections = extract_connections(packets)
     print(f"Found {len(connections)} connections\n")
 
+    # Calculate protocol statistics
+    protocol_stats = get_protocol_statistics(connections)
+
+    print("\nProtocol Statistics")
+    print("-" * 25)
+
+    for protocol, count in protocol_stats.items():
+        print(f"{protocol}: {count:,} packets")
+
+    print()
+
     top_connections = connections[:args.top]
 
     # Hide real IP addresses if asked
     if args.anonymise:
         anonymiser = Anonymiser()
-        top_connections = [anonymiser.connection(c) for c in top_connections]
+        top_connections = [
+            anonymiser.connection(c)
+            for c in top_connections
+        ]
 
     # Display the busiest connections
     print_connections(top_connections)
+
 
 
 if __name__ == "__main__":
