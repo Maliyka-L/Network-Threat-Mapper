@@ -10,6 +10,7 @@ from parser.pcap_loader import load_pcap
 from parser.connection_extractor import extract_connections
 from utils.anonymiser import Anonymiser
 from parser.host_classifier import classify_host
+from parser.top_talkers import get_top_talkers
 
 
 # Read the command line options
@@ -94,6 +95,33 @@ def main():
     print("-" * 25)
     print(f"Internal Hosts: {len(internal_hosts)}")
     print(f"External Hosts: {len(external_hosts)}")
+    print()
+
+        # Identify the hosts generating the most traffic
+    top_talkers = get_top_talkers(connections)
+
+    if args.anonymise:
+
+        anonymiser = Anonymiser()
+
+        anonymised_talkers = []
+
+        for host, packet_count in top_talkers[:5]:
+
+            anonymised_host = anonymiser.ip(host)
+
+            anonymised_talkers.append(
+                (anonymised_host, packet_count)
+            )
+
+        top_talkers = anonymised_talkers
+    
+    print("Top Talkers")
+    print("-" * 25)
+
+    for host, packet_count in top_talkers[:5]:
+        print(f"{host}: {packet_count:,} packets")
+
     print()
 
     top_connections = connections[:args.top]
