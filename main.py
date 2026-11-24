@@ -9,6 +9,7 @@ from parser.statistics import get_protocol_statistics
 from parser.pcap_loader import load_pcap
 from parser.connection_extractor import extract_connections
 from utils.anonymiser import Anonymiser
+from parser.host_classifier import classify_host
 
 
 # Read the command line options
@@ -73,6 +74,29 @@ def main():
 
     print()
 
+        # Count internal and external hosts
+    internal_hosts = set()
+    external_hosts = set()
+
+    for connection in connections:
+
+        if classify_host(connection["src"]) == "INTERNAL":
+            internal_hosts.add(connection["src"])
+        else:
+            external_hosts.add(connection["src"])
+
+        if classify_host(connection["dst"]) == "INTERNAL":
+            internal_hosts.add(connection["dst"])
+        else:
+            external_hosts.add(connection["dst"])
+
+    print("Host Summary")
+    print("-" * 25)
+    print(f"Internal Hosts: {len(internal_hosts)}")
+    print(f"External Hosts: {len(external_hosts)}")
+    print()
+
+    top_connections = connections[:args.top]
     top_connections = connections[:args.top]
 
     # Hide real IP addresses if asked
@@ -82,11 +106,6 @@ def main():
             anonymiser.connection(c)
             for c in top_connections
         ]
-
-    # Display the busiest connections
-    print_connections(top_connections)
-
-
 
 if __name__ == "__main__":
     main()
