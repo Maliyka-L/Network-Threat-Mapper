@@ -13,7 +13,7 @@ from parser.host_classifier import classify_host
 from parser.top_talkers import get_top_talkers
 from parser.port_analysis import get_top_ports
 from detections.unusual_ports import detect_unusual_ports
-
+from detections.risk_score import calculate_risk_score
 
 
 # Read the command line options
@@ -156,6 +156,23 @@ def main():
                 f"{alert['type']} "
                 f"on port {alert['port']}"
             )
+
+    print()
+
+    risk_score = calculate_risk_score(alerts)
+
+    print("Risk Score")
+    print("-" * 25)
+    print(f"Score: {risk_score}/100")
+
+    if risk_score >= 70:
+        print("Risk Level: HIGH")
+
+    elif risk_score >= 30:
+        print("Risk Level: MEDIUM")
+
+    else:
+        print("Risk Level: LOW")
 
     print()
 
