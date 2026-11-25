@@ -11,6 +11,7 @@ from parser.connection_extractor import extract_connections
 from utils.anonymiser import Anonymiser
 from parser.host_classifier import classify_host
 from parser.top_talkers import get_top_talkers
+from parser.port_analysis import get_top_ports
 
 
 # Read the command line options
@@ -75,7 +76,7 @@ def main():
 
     print()
 
-        # Count internal and external hosts
+    # Count internal and external hosts
     internal_hosts = set()
     external_hosts = set()
 
@@ -97,7 +98,7 @@ def main():
     print(f"External Hosts: {len(external_hosts)}")
     print()
 
-        # Identify the hosts generating the most traffic
+    # Identify the hosts generating the most traffic
     top_talkers = get_top_talkers(connections)
 
     if args.anonymise:
@@ -115,7 +116,7 @@ def main():
             )
 
         top_talkers = anonymised_talkers
-    
+
     print("Top Talkers")
     print("-" * 25)
 
@@ -124,16 +125,31 @@ def main():
 
     print()
 
-    top_connections = connections[:args.top]
+    # Most common destination ports
+    top_ports = get_top_ports(connections)
+
+    print("Top Ports")
+    print("-" * 25)
+
+    for port, count in top_ports[:5]:
+        print(f"{port}: {count} connections")
+
+    print()
+
     top_connections = connections[:args.top]
 
     # Hide real IP addresses if asked
     if args.anonymise:
+
         anonymiser = Anonymiser()
+
         top_connections = [
             anonymiser.connection(c)
             for c in top_connections
         ]
 
+    # Display connection table
+    print_connections(top_connections)
+    
 if __name__ == "__main__":
     main()
