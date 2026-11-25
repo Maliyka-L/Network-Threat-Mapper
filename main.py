@@ -12,6 +12,8 @@ from utils.anonymiser import Anonymiser
 from parser.host_classifier import classify_host
 from parser.top_talkers import get_top_talkers
 from parser.port_analysis import get_top_ports
+from detections.unusual_ports import detect_unusual_ports
+
 
 
 # Read the command line options
@@ -125,7 +127,7 @@ def main():
 
     print()
 
-    # Most common destination ports
+    # Analyse most common ports
     top_ports = get_top_ports(connections)
 
     print("Top Ports")
@@ -133,6 +135,27 @@ def main():
 
     for port, count in top_ports[:5]:
         print(f"{port}: {count} connections")
+
+    print()
+
+    # Detect unusual ports
+    alerts = detect_unusual_ports(connections)
+
+    print("Threat Alerts")
+    print("-" * 25)
+
+    if not alerts:
+        print("No unusual ports detected")
+
+    else:
+
+        for alert in alerts[:5]:
+
+            print(
+                f"[{alert['severity']}] "
+                f"{alert['type']} "
+                f"on port {alert['port']}"
+            )
 
     print()
 
@@ -150,6 +173,6 @@ def main():
 
     # Display connection table
     print_connections(top_connections)
-    
+
 if __name__ == "__main__":
     main()
