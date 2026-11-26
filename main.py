@@ -5,16 +5,21 @@ Entry point for the application.
 """
 
 import argparse
+
 from parser.statistics import get_protocol_statistics
 from parser.pcap_loader import load_pcap
 from parser.connection_extractor import extract_connections
-from utils.anonymiser import Anonymiser
 from parser.host_classifier import classify_host
 from parser.top_talkers import get_top_talkers
 from parser.port_analysis import get_top_ports
+
+from utils.anonymiser import Anonymiser
+
 from detections.unusual_ports import detect_unusual_ports
-from detections.risk_score import calculate_risk_score
+from detections.cleartext_protocols import detect_cleartext_protocols
 from detections.port_scan import detect_port_scans
+from detections.risk_score import calculate_risk_score
+
 
 # Read the command line options
 def get_arguments():
@@ -47,12 +52,33 @@ def get_arguments():
 # Display connections as a table
 def print_connections(connections):
 
-    print(f"{'Source':<28} {'Destination':<28} {'Protocol':<9} {'Port':<7} {'Packets':>8} {'Bytes':>10}")
+    print(
+        f"{'Source':<28} "
+        f"{'Destination':<28} "
+        f"{'Protocol':<9} "
+        f"{'Port':<7} "
+        f"{'Packets':>8} "
+        f"{'Bytes':>10}"
+    )
+
     print("-" * 95)
 
-    for c in connections:
-        port = c["port"] if c["port"] is not None else "-"
-        print(f"{c['src']:<28} {c['dst']:<28} {c['protocol']:<9} {str(port):<7} {c['packets']:>8} {c['bytes']:>10}")
+    for connection in connections:
+
+        port = (
+            connection["port"]
+            if connection["port"] is not None
+            else "-"
+        )
+
+        print(
+            f"{connection['src']:<28} "
+            f"{connection['dst']:<28} "
+            f"{connection['protocol']:<9} "
+            f"{str(port):<7} "
+            f"{connection['packets']:>8} "
+            f"{connection['bytes']:>10}"
+        )
 
 
 def main():
@@ -61,16 +87,18 @@ def main():
 
     # Load packets from the capture
     packets = load_pcap(args.pcap_file)
+
     print(f"Loaded {len(packets)} packets")
 
     # Group packets into connections
     connections = extract_connections(packets)
+
     print(f"Found {len(connections)} connections\n")
 
     # Calculate protocol statistics
     protocol_stats = get_protocol_statistics(connections)
 
-    print("\nProtocol Statistics")
+    print("Protocol Statistics")
     print("-" * 25)
 
     for protocol, count in protocol_stats.items():
@@ -146,6 +174,10 @@ def main():
     )
 
     alerts.extend(
+        detect_cleartext_protocols(connections)
+    )
+
+    alerts.extend(
         detect_port_scans(connections)
     )
 
@@ -168,7 +200,15 @@ def main():
                     f"from {alert['source']} "
                     f"to {alert['destination']} "
                     f"({alert['ports']} ports)"
-            )
+                )
+
+            elif alert["type"] == "Cleartext Protocol":
+
+                print(
+                    f"[{alert['severity']}] "
+                    f"{alert['protocol']} "
+                    f"traffic detected"
+                )
 
             else:
 
@@ -206,12 +246,13 @@ def main():
         anonymiser = Anonymiser()
 
         top_connections = [
-            anonymiser.connection(c)
-            for c in top_connections
+            anonymiser.connection(connection)
+            for connection in top_connections
         ]
 
     # Display connection table
     print_connections(top_connections)
+
 
 if __name__ == "__main__":
     main()
