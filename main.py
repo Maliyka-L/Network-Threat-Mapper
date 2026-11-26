@@ -165,8 +165,10 @@ def main():
                 print(
                     f"[{alert['severity']}] "
                     f"{alert['type']} "
-                    f"detected from {alert['source']}"
-                )
+                    f"from {alert['source']} "
+                    f"to {alert['destination']} "
+                    f"({alert['ports']} ports)"
+            )
 
             else:
 

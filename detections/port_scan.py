@@ -7,30 +7,33 @@ def detect_port_scans(connections):
 
     alerts = []
 
-    source_ports = {}
+    scan_tracker = {}
 
     for connection in connections:
 
         source = connection["src"]
+        destination = connection["dst"]
         port = connection["port"]
 
         if port is None:
             continue
 
-        if source not in source_ports:
-            source_ports[source] = set()
+        key = (source, destination)
 
-        source_ports[source].add(port)
+        if key not in scan_tracker:
+            scan_tracker[key] = set()
 
-    for source, ports in source_ports.items():
+        scan_tracker[key].add(port)
 
-        # Alert if a host touches many ports
+    for (source, destination), ports in scan_tracker.items():
+
         if len(ports) >= 10:
 
             alerts.append({
                 "severity": "HIGH",
                 "type": "Port Scan",
                 "source": source,
+                "destination": destination,
                 "ports": len(ports)
             })
 
