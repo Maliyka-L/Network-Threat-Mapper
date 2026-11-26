@@ -14,7 +14,7 @@ from parser.top_talkers import get_top_talkers
 from parser.port_analysis import get_top_ports
 from detections.unusual_ports import detect_unusual_ports
 from detections.risk_score import calculate_risk_score
-
+from detections.port_scan import detect_port_scans
 
 # Read the command line options
 def get_arguments():
@@ -138,27 +138,47 @@ def main():
 
     print()
 
-    # Detect unusual ports
-    alerts = detect_unusual_ports(connections)
+    # Run threat detections
+    alerts = []
+
+    alerts.extend(
+        detect_unusual_ports(connections)
+    )
+
+    alerts.extend(
+        detect_port_scans(connections)
+    )
 
     print("Threat Alerts")
     print("-" * 25)
 
     if not alerts:
-        print("No unusual ports detected")
+
+        print("No threats detected")
 
     else:
 
         for alert in alerts[:5]:
 
-            print(
-                f"[{alert['severity']}] "
-                f"{alert['type']} "
-                f"on port {alert['port']}"
-            )
+            if alert["type"] == "Port Scan":
+
+                print(
+                    f"[{alert['severity']}] "
+                    f"{alert['type']} "
+                    f"detected from {alert['source']}"
+                )
+
+            else:
+
+                print(
+                    f"[{alert['severity']}] "
+                    f"{alert['type']} "
+                    f"on port {alert['port']}"
+                )
 
     print()
 
+    # Calculate risk score
     risk_score = calculate_risk_score(alerts)
 
     print("Risk Score")
