@@ -20,6 +20,7 @@ from detections.cleartext_protocols import detect_cleartext_protocols
 from detections.port_scan import detect_port_scans
 from detections.risk_score import calculate_risk_score
 from detections.brute_force import detect_brute_force
+from detections.alert_summary import get_alert_summary
 
 
 # Read the command line options
@@ -233,6 +234,14 @@ def main():
 
     print()
 
+    print()
+
+    summary = get_alert_summary(alerts)
+    print("Alert Summary")
+    print("-" * 25)
+    print(f"HIGH: {summary['HIGH']}")
+    print(f"MEDIUM: {summary['MEDIUM']}")
+    print(f"LOW: {summary['LOW']}")
     print()
 
     # Calculate risk score
