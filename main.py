@@ -19,6 +19,7 @@ from detections.unusual_ports import detect_unusual_ports
 from detections.cleartext_protocols import detect_cleartext_protocols
 from detections.port_scan import detect_port_scans
 from detections.risk_score import calculate_risk_score
+from detections.brute_force import detect_brute_force
 
 
 # Read the command line options
@@ -181,6 +182,10 @@ def main():
         detect_port_scans(connections)
     )
 
+    alerts.extend(
+        detect_brute_force(connections)
+    )
+
     print("Threat Alerts")
     print("-" * 25)
 
@@ -202,6 +207,14 @@ def main():
                     f"({alert['ports']} ports)"
                 )
 
+            elif alert["type"] == "Brute Force":
+
+                print(
+                    f"[{alert['severity']}] "
+                    f"{alert['protocol']} "
+                    f"brute force activity detected"
+                )
+
             elif alert["type"] == "Cleartext Protocol":
 
                 print(
@@ -217,6 +230,8 @@ def main():
                     f"{alert['type']} "
                     f"on port {alert['port']}"
                 )
+
+    print()
 
     print()
 
@@ -238,6 +253,7 @@ def main():
 
     print()
 
+    # Select top connections for display
     top_connections = connections[:args.top]
 
     # Hide real IP addresses if asked
