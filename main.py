@@ -22,7 +22,7 @@ from detections.risk_score import calculate_risk_score
 from detections.brute_force import detect_brute_force
 from detections.alert_summary import get_alert_summary
 from detections.mitre_mapping import add_mitre_mappings
-
+from reports.json_export import export_json
 
 # Read the command line options
 def get_arguments():
@@ -250,6 +250,20 @@ def main():
     print(f"HIGH: {summary['HIGH']}")
     print(f"MEDIUM: {summary['MEDIUM']}")
     print(f"LOW: {summary['LOW']}")
+    print()
+
+    report_data = {
+        "packet_count": len(packets),
+        "connection_count": len(connections),
+        "alerts": alerts,
+        "alert_summary": summary
+    }
+
+    output_file = export_json(report_data)
+
+    print("Export")
+    print("-" * 25)
+    print(f"JSON report saved: {output_file}")
     print()
 
     # Calculate risk score
