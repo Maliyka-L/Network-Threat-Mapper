@@ -21,6 +21,7 @@ from detections.port_scan import detect_port_scans
 from detections.risk_score import calculate_risk_score
 from detections.brute_force import detect_brute_force
 from detections.alert_summary import get_alert_summary
+from detections.mitre_mapping import add_mitre_mappings
 
 
 # Read the command line options
@@ -187,6 +188,8 @@ def main():
         detect_brute_force(connections)
     )
 
+    alerts = add_mitre_mappings(alerts)
+
     print("Threat Alerts")
     print("-" * 25)
 
@@ -198,39 +201,44 @@ def main():
 
         for alert in alerts[:5]:
 
-            if alert["type"] == "Port Scan":
+            mitre = (
+            f"{alert['mitre_id']} "
+            f"({alert['mitre_name']})"
+            )
 
-                print(
-                    f"[{alert['severity']}] "
-                    f"{alert['type']} "
-                    f"from {alert['source']} "
-                    f"to {alert['destination']} "
-                    f"({alert['ports']} ports)"
-                )
+        if alert["type"] == "Port Scan":
 
-            elif alert["type"] == "Brute Force":
+            print(
+                f"[{alert['severity']}] "
+                f"{alert['type']} "
+                f"| MITRE: {mitre} "
+                f"| {alert['source']} -> "
+                f"{alert['destination']}"
+            )
 
-                print(
-                    f"[{alert['severity']}] "
-                    f"{alert['protocol']} "
-                    f"brute force activity detected"
-                )
+        elif alert["type"] == "Brute Force":
 
-            elif alert["type"] == "Cleartext Protocol":
+            print(
+                f"[{alert['severity']}] "
+                f"{alert['protocol']} brute force "
+                f"| MITRE: {mitre}"
+            )
 
-                print(
-                    f"[{alert['severity']}] "
-                    f"{alert['protocol']} "
-                    f"traffic detected"
-                )
+        elif alert["type"] == "Cleartext Protocol":
 
-            else:
+            print(
+                f"[{alert['severity']}] "
+                f"{alert['protocol']} traffic "
+                f"| MITRE: {mitre}"
+            )
 
-                print(
-                    f"[{alert['severity']}] "
-                    f"{alert['type']} "
-                    f"on port {alert['port']}"
-                )
+        else:
+
+            print(
+                f"[{alert['severity']}] "
+                f"{alert['type']} "
+                f"| MITRE: {mitre}"
+            )
 
     print()
 
